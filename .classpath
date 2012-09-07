@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="lib" path="C:/Users/arohne/workspace/IPFTransitWeighting/third-party/jackcess-1.2.8.jar" sourcepath="C:/Users/arohne/workspace/IPFTransitWeighting/third-party/jackcess-1.2.8-sources.jar"/>
+	<classpathentry kind="lib" path="C:/Users/arohne/workspace/IPFTransitWeighting/third-party/commons-logging-1.1.1/commons-logging-1.1.1.jar" sourcepath="C:/Users/arohne/workspace/IPFTransitWeighting/third-party/commons-logging-1.1.1/commons-logging-1.1.1-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/C:/Users/arohne/workspace/IPFTransitWeighting/third-party/commons-logging-1.1.1/commons-logging-1.1.1-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="C:/Users/arohne/workspace/IPFTransitWeighting/third-party/commons-lang-2.6/commons-lang-2.6.jar" sourcepath="C:/Users/arohne/workspace/IPFTransitWeighting/third-party/commons-lang-2.6/commons-lang-2.6-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/C:/Users/arohne/workspace/IPFTransitWeighting/third-party/commons-lang-2.6/commons-lang-2.6-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
