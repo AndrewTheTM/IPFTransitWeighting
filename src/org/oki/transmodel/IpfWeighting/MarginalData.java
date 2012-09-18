@@ -32,10 +32,13 @@ public class MarginalData {
 		Boardings+=Boards;
 	}
 	
+	/**
+	 * Gets ONE marginal from the Stop On-Off Table
+	 * @param tableSetup The hashtable that defines the database tables, fields, etc.
+	 * @param RTD The route, time, and day (pipe-delimited) to work on.
+	 * @return A list of marginals for the input RTD
+	 */
 	public static List<MarginalData> getMarginals(Hashtable<String,String> tableSetup, String RTD){
-		/*
-		 * Gets ONE marginal from the Stop On-Off Table
-		 */
 		List<MarginalData> output=new ArrayList<MarginalData>();
 		File dFile = new File((String) tableSetup.get("dataFile"));
 		String RTD1=RTD.substring(0, RTD.indexOf("|"));
@@ -50,19 +53,9 @@ public class MarginalData {
 					output.add(new MarginalData((int)row.get((String)tableSetup.get("sof_stopid")),
 							((Double)row.get((String)tableSetup.get("sof_boardingField"))).intValue(),
 							((Double)row.get((String)tableSetup.get("sof_alightingField"))).intValue()));  
-			} //looping through table records
-			
-			int brdTot=0, altTot=0;
-			for(MarginalData md:output){
-				brdTot+=md.Boardings;
-				altTot+=md.Alightings;
 			}
-			System.out.println(brdTot);
-			System.out.println(altTot);
-			
 			return output;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}

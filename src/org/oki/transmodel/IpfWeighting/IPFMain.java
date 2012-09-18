@@ -1,8 +1,11 @@
 package org.oki.transmodel.IpfWeighting;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+
+import org.apache.log4j.Logger;
 /*
  * Author: Andrew Rohne
  * Date: 7-Sep-2012
@@ -15,10 +18,11 @@ import java.util.List;
 
 public class IPFMain {
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {		
+	public static Logger logger = Logger.getLogger(IPFMain.class);
+	public static List<RouteNodes> Routes=new ArrayList<RouteNodes>();
+
+	public static void main(String[] args) {	
+		logger.info("Program Start");
 		//Get list of route-time-direction sets to work on
 		Hashtable<String, String> tableSetup=new Hashtable<String, String>();
 		tableSetup.put("dataFile", "S:\\User\\Rohne\\Projects\\Transit OB Survey\\Weighting\\NewMetroWeight.mdb");
@@ -37,13 +41,33 @@ public class IPFMain {
 
 		List<String> routesRTD=Controller.getRoutes(tableSetup);
 		
+		//Load Routes into RouteNodes Object
+		logger.info("Preparing to load nodes");
+		
+		for(String RTD:routesRTD)
+			try {
+				Routes.add(LoadRouteNodes.Load(tableSetup, RTD));
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+		logger.info("Nodes loaded");
+		
 		//TODO: Sampled route IPF adjustments
 		
 		List<MarginalData> marginals=new ArrayList<MarginalData>();
+		List<SeedData> seeds=new ArrayList<SeedData>();
 		for(String rtd:routesRTD){
 			System.out.println(rtd);
 			//Fill Marginals Objects
 			marginals=MarginalData.getMarginals(tableSetup,rtd);
+			seeds=SeedData.getSeeds(tableSetup, Routes, rtd);
+			List<SeedData>outSD2=new ArrayList<SeedData>();
+			try {
+				outSD2=SeedData.reSeedTable(tableSetup, Routes, seeds, marginals, rtd);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
 			
 			break;
 		}
@@ -51,9 +75,6 @@ public class IPFMain {
 		//TODO: Non-sampled route adjustment (vehicle adjustments)
 		
 		
-		
-		int a=1;
-		System.out.println(a);
 	}
 
 

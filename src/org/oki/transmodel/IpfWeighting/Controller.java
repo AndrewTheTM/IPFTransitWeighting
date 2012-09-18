@@ -15,10 +15,14 @@ import com.healthmarketscience.jackcess.Table;
  * date: 7-Sep-2012
  */
 public class Controller {
-	/*
+
+	/**
 	 * Class to open main survey table and prepare a list of individual routes, times, and directions to IPF on.
+	 * @param tableSetup The hashtable that defines the database tables, fields, etc. 
+	 * @return A list of routes
 	 */
 	public static List<String> getRoutes(Hashtable<String, String> tableSetup){
+
 		try {
 			List<String> outputRTDs=new ArrayList<String>();
 			File dFile = new File((String) tableSetup.get("dataFile"));
