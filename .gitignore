@@ -1,0 +1,4 @@
+bin/*
+doc/
+third-party/
+*.log

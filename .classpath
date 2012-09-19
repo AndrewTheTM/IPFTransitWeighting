@@ -13,5 +13,6 @@
 			<attribute name="javadoc_location" value="jar:file:/C:/Users/arohne/workspace/IPFTransitWeighting/third-party/commons-lang-2.6/commons-lang-2.6-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="C:/Users/arohne/workspace/IPFTransitWeighting/third-party/log4j-1.2.16.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
