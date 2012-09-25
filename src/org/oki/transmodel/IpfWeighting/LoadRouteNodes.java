@@ -26,7 +26,7 @@ public class LoadRouteNodes {
 	 */
 	public static RouteNodes Load(Hashtable<String,String> tableSetup, String RTD) throws IOException{
 		Logger logger=IPFMain.logger;
-		logger.info("Loading"+RTD);
+		logger.debug("Route Nodes Loading"+RTD);
 		String RTD1=RTD.substring(0, RTD.indexOf("|")); //Line name
 		String RTD2=RTD.substring(RTD.indexOf("|")+1, RTD.indexOf("|", RTD.indexOf("|")+1)); //Time
 		String RTD3=RTD.substring(RTD.lastIndexOf("|")+1,RTD.length()); //Direction		
@@ -41,11 +41,22 @@ public class LoadRouteNodes {
 						rn.routeID=RTD1;
 						rn.Direction=RTD3;
 						rn.TimePeriod=RTD2;
-						rn.Nodes.add(((Double) (sRow.get("stop_id"))).intValue());
+						Node nn=new Node();
+						nn.Id=((Double) (sRow.get("stop_id"))).intValue();
+						Table betterStopTable=Database.open(dFile).getTable("Stops");
+						for(Map<String,Object> bstRow:betterStopTable){
+							if(((Double)bstRow.get("StopID")).intValue()==nn.Id){
+								nn.x=((Double) bstRow.get("X"));
+								nn.y=((Double) bstRow.get("Y"));
+								break;
+							}
+						}
+						rn.Nodes.add(nn);
 					}
 				}
 			}
 		}
+		rcTransTable.getDatabase().close();
 		
 		return rn;
 		

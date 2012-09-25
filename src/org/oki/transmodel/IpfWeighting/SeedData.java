@@ -71,8 +71,6 @@ public class SeedData {
 		List<SeedData> inSD=new ArrayList<SeedData>();
 		List<SeedData> outSD=new ArrayList<SeedData>();
 		
-		//TODO: Somewhere in here the seed values that have off-route boardings or alightings must be fixed to show the boarding/alighting at the best possible transfer location
-		
 		try {
 			table = Database.open(dFile).getTable((String) tableSetup.get("surveyTable"));
 			for(Map<String,Object> row:table){
@@ -102,6 +100,7 @@ public class SeedData {
 					inSD.add(newSD);
 				}
 			}
+			table.getDatabase().close();
 			for(int s=inSD.size()-1;s>=0;s--){
 				int bc=0, ac=0;
 				bc=inSD.get(s).BoardLocation;
@@ -123,15 +122,15 @@ public class SeedData {
 				}
 			}
 			
-			//TODO: Check for nodes that are not on the route
-			for(SeedData sd:outSD){
+			for(int i=0;i<outSD.size();i++){
+				SeedData sd=outSD.get(i);
 				for(RouteNodes rn:routeNodes){
 					boolean foundB=false, foundA=false;
 					if(rn.routeID.equals(RTD1) && rn.TimePeriod.equals(RTD2) && rn.Direction.equals(RTD3)){
-						for(Integer rnStop:rn.Nodes){
-							if(sd.BoardLocation==rnStop)
+						for(Node rnStop:rn.Nodes){
+							if(sd.BoardLocation==rnStop.Id)
 								foundB=true;
-							if(sd.AlightLocation==rnStop)
+							if(sd.AlightLocation==rnStop.Id)
 								foundA=true;
 							if(foundB && foundA)
 								break;
@@ -139,20 +138,20 @@ public class SeedData {
 						if(!foundB){
 							logger.info("Boarding location not found. Boarding="+sd.BoardLocation);
 							int tn=0;
-							tn=RouteNodes.FindTransferLocation((Integer)sd.BoardLocation);
+							tn=RouteNodes.FindTransferLocation((Integer)sd.BoardLocation, rn,IPFMain.otherRouteStops);
 							if(tn>0)
-								logger.info("Found transfer node of "+tn);
+								logger.debug("Found transfer node of "+tn); //Direct transfer
 							else
-								logger.error("Transfer node not found.  Looking for "+sd.BoardLocation+" in "+RTD);
+								logger.debug("Transfer node not found.  Looking for "+sd.BoardLocation+" in "+RTD);
 						}
 						if(!foundA){
 							logger.info("Alighting location not found. Alighting="+sd.AlightLocation);
 							int tn=0;
-							tn=RouteNodes.FindTransferLocation((Integer)sd.AlightLocation);
+							tn=RouteNodes.FindTransferLocation((Integer)sd.AlightLocation, rn, IPFMain.otherRouteStops);
 							if(tn>0)
-								logger.info("Found transfer node of "+tn);
+								logger.debug("Found transfer node of "+tn); //Direct transfer
 							else
-								logger.error("Transfer node not found.  Looking for "+sd.AlightLocation+" in "+RTD);
+								logger.debug("Transfer node not found.  Looking for "+sd.AlightLocation+" in "+RTD);
 						}
 					}
 				}
@@ -180,6 +179,7 @@ public class SeedData {
 	 */	
 	public static List<SeedData> reSeedTable(Hashtable<String,String> tableSetup, List<RouteNodes> routeNodes, List<SeedData> seeds, List<MarginalData>marginals, String RTD) throws IOException{
 		Logger logger=IPFMain.logger;
+		logger.debug("In reseed table process");
 		String RTD1=RTD.substring(0, RTD.indexOf("|")); //Line name
 		String RTD2=RTD.substring(RTD.indexOf("|")+1, RTD.indexOf("|", RTD.indexOf("|")+1)); //Time
 		String RTD3=RTD.substring(RTD.lastIndexOf("|")+1,RTD.length()); //Direction		
@@ -189,15 +189,16 @@ public class SeedData {
 		for(RouteNodes rn:routeNodes){
 			int count=0;
 			if(rn.routeID.equals(RTD1) && rn.Direction.equals(RTD3) && rn.TimePeriod.equals(RTD2)){
-				for(Integer n:rn.Nodes)
-					stopOrder.put(n, ++count);
+				for(Node n:rn.Nodes)
+					stopOrder.put(n.Id, ++count);
 			}
 		}
 		
 		// Marginals that are not in the route sequence
+
 		for(MarginalData md:marginals){
 			if(stopOrder.get(md.StopID) == null)
-				logger.warn("Route "+RTD1+"Stop ID "+md.StopID+" in marginals but not route stops listing");
+				logger.debug("Route "+RTD1+"Stop ID "+md.StopID+" in marginals but not route stops listing");
 		}
 		
 		// Fill output seed data with actual value or 0.1
@@ -208,6 +209,10 @@ public class SeedData {
 					if(m.StopID==sd.BoardLocation && n.StopID==sd.AlightLocation){
 						outSD.add(sd);
 						break;
+					}else if(stopOrder.get(m.StopID)==null){
+						logger.debug("Route "+RTD+" stop "+m.StopID+" not in sequence");
+					}else if(stopOrder.get(n.StopID)==null){
+						logger.debug("Route "+RTD+" stop "+n.StopID+" not in sequence");
 					}else if(stopOrder.get(m.StopID)<=stopOrder.get(n.StopID)){
 						SeedData newsd=new SeedData(m.StopID,n.StopID,0.1);
 						outSD.add(newsd);

@@ -20,6 +20,7 @@ public class IPFMain {
 
 	public static Logger logger = Logger.getLogger(IPFMain.class);
 	public static List<RouteNodes> Routes=new ArrayList<RouteNodes>();
+	public static List<OtherStops> otherRouteStops=new ArrayList<OtherStops>();
 
 	public static void main(String[] args) {	
 		logger.info("Program Start");
@@ -43,35 +44,46 @@ public class IPFMain {
 		
 		//Load Routes into RouteNodes Object
 		logger.info("Preparing to load nodes");
-		
+		int cnt=0;
 		for(String RTD:routesRTD)
 			try {
+				if(++cnt%10==0)
+					logger.info("Loading "+cnt+" of "+routesRTD.size());
 				Routes.add(LoadRouteNodes.Load(tableSetup, RTD));
+				//if(cnt==10)
+					//break;
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
 		logger.info("Nodes loaded");
 		
+		logger.info("Loading Other Routes...");
+		otherRouteStops=OtherStops.getOtherStops(tableSetup);
+		logger.info("Finished loading other routes.");
+		
 		//TODO: Sampled route IPF adjustments
 		
 		List<MarginalData> marginals=new ArrayList<MarginalData>();
 		List<SeedData> seeds=new ArrayList<SeedData>();
+		
 		for(String rtd:routesRTD){
-			System.out.println(rtd);
+			logger.info("Filling marginal objects. "+rtd);
 			//Fill Marginals Objects
 			marginals=MarginalData.getMarginals(tableSetup,rtd);
 			seeds=SeedData.getSeeds(tableSetup, Routes, rtd);
 			List<SeedData>outSD2=new ArrayList<SeedData>();
 			try {
+				logger.info("Reseeding Table");
 				outSD2=SeedData.reSeedTable(tableSetup, Routes, seeds, marginals, rtd);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 			
 			
-			break;
+			//break;
 		}
-		
+		int a=1;
+		System.out.println(a);
 		//TODO: Non-sampled route adjustment (vehicle adjustments)
 		
 		
