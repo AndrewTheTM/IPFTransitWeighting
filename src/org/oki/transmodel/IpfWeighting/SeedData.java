@@ -95,9 +95,10 @@ public class SeedData {
 						ac=(int) row.get("ALTCODE");
 					}
 				
-					
-					SeedData newSD=new SeedData(bc,ac);
-					inSD.add(newSD);
+					if(bc!=ac){
+						SeedData newSD=new SeedData(bc,ac);
+						inSD.add(newSD);
+					}
 				}
 			}
 			table.getDatabase().close();
@@ -178,6 +179,7 @@ public class SeedData {
 	 * @throws IOException
 	 */	
 	public static List<SeedData> reSeedTable(Hashtable<String,String> tableSetup, List<RouteNodes> routeNodes, List<SeedData> seeds, List<MarginalData>marginals, String RTD) throws IOException{
+		//TODO: check for same boarding and alighting location (if so, ignore it)
 		Logger logger=IPFMain.logger;
 		logger.debug("In reseed table process");
 		String RTD1=RTD.substring(0, RTD.indexOf("|")); //Line name
@@ -206,14 +208,14 @@ public class SeedData {
 		for(MarginalData m:marginals){
 			for(MarginalData n:marginals){
 				for(SeedData sd:seeds){
-					if(m.StopID==sd.BoardLocation && n.StopID==sd.AlightLocation){
+					if(m.StopID==sd.BoardLocation && n.StopID==sd.AlightLocation && m.StopID!=n.StopID){
 						outSD.add(sd);
 						break;
 					}else if(stopOrder.get(m.StopID)==null){
 						logger.debug("Route "+RTD+" stop "+m.StopID+" not in sequence");
 					}else if(stopOrder.get(n.StopID)==null){
 						logger.debug("Route "+RTD+" stop "+n.StopID+" not in sequence");
-					}else if(stopOrder.get(m.StopID)<=stopOrder.get(n.StopID)){
+					}else if(stopOrder.get(m.StopID)<stopOrder.get(n.StopID)){
 						SeedData newsd=new SeedData(m.StopID,n.StopID,0.1);
 						outSD.add(newsd);
 						break;
@@ -222,6 +224,6 @@ public class SeedData {
 				}
 			}
 		}
-		return null;
+		return outSD;
 	}
 }

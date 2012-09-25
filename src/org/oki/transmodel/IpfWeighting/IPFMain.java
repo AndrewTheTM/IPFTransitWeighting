@@ -26,7 +26,8 @@ public class IPFMain {
 		logger.info("Program Start");
 		//Get list of route-time-direction sets to work on
 		Hashtable<String, String> tableSetup=new Hashtable<String, String>();
-		tableSetup.put("dataFile", "S:\\User\\Rohne\\Projects\\Transit OB Survey\\Weighting\\NewMetroWeight.mdb");
+		
+		tableSetup.put("dataFile", "C:\\Users\\Andrew\\Documents\\NewMetroWeight.mdb");
 		tableSetup.put("surveyTable","MetroData");
 		tableSetup.put("scheduleTable", "SCHEDULE");
 		tableSetup.put("StopOnOffTable", "BusStopRTD");
@@ -50,8 +51,8 @@ public class IPFMain {
 				if(++cnt%10==0)
 					logger.info("Loading "+cnt+" of "+routesRTD.size());
 				Routes.add(LoadRouteNodes.Load(tableSetup, RTD));
-				//if(cnt==10)
-					//break;
+				if(cnt==10)
+					break;
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
@@ -78,7 +79,8 @@ public class IPFMain {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			
+			int b=1;
+			System.out.println(b);
 			
 			//break;
 		}
