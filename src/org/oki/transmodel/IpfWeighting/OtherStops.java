@@ -2,6 +2,7 @@ package org.oki.transmodel.IpfWeighting;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -15,8 +16,12 @@ import com.healthmarketscience.jackcess.Table;
  * @author arohne
  *
  */
-public class OtherStops {
+public class OtherStops implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4734570753004219126L;
 	String RouteId;
 	List<Node> Nodes=new ArrayList<Node>();
 	

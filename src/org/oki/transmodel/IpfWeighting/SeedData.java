@@ -20,6 +20,7 @@ public class SeedData {
 	int BoardLocation;
 	int AlightLocation;
 	double SeedValue;
+	double WeightValue;
 	int Sequence;
 
 	/**
@@ -30,6 +31,7 @@ public class SeedData {
 		this.BoardLocation=BoardLocation;
 		this.AlightLocation=AlightLocation;
 		this.SeedValue=1;
+		this.WeightValue=0;
 		this.Sequence=0;
 	}
 	
@@ -43,6 +45,7 @@ public class SeedData {
 		this.AlightLocation=AlightLocation;
 		this.SeedValue=SeedValue;
 		this.Sequence=0;
+		this.WeightValue=0;
 	}
 	
 	public SeedData() {
@@ -51,6 +54,7 @@ public class SeedData {
 		this.AlightLocation=0;
 		this.SeedValue=0;
 		this.Sequence=0;
+		this.WeightValue=0;
 	}
 	
 	/**
@@ -78,21 +82,19 @@ public class SeedData {
 				row.get(tableSetup.get("directionField")).toString().equals(RTD3) &&
 				row.get(tableSetup.get("timeField")).toString().equals(RTD2)){
 					int bc=0, ac=0;
-					
-					//TODO: replace BRDCODE and ALTCODE with hashtable
-					if(row.get("BRDCODE") instanceof Double){
-						Double bc1=((double)row.get("BRDCODE"));
+					if(row.get(tableSetup.get("BoardingLocationCode")) instanceof Double){
+						Double bc1=((double)row.get(tableSetup.get("BoardingLocationCode")));
 						bc=bc1.intValue();
 					}
-					else if(row.get("BRDCODE") instanceof Integer){
-						bc=(int)row.get("BRDCODE");
+					else if(row.get(tableSetup.get("BoardingLocationCode")) instanceof Integer){
+						bc=(int)row.get(tableSetup.get("BoardingLocationCode"));
 					}
 					
-					if(row.get("ALTCODE") instanceof Double){
-						Double ac1=((double)row.get("ALTCODE"));
+					if(row.get(tableSetup.get("AlightingLocationCode")) instanceof Double){
+						Double ac1=((double)row.get(tableSetup.get("AlightingLocationCode")));
 						ac=ac1.intValue();
-					}else if(row.get("ALTCODE")instanceof Integer){
-						ac=(int) row.get("ALTCODE");
+					}else if(row.get(tableSetup.get("AlightingLocationCode"))instanceof Integer){
+						ac=(int) row.get(tableSetup.get("AlightingLocationCode"));
 					}
 				
 					if(bc!=ac){
@@ -140,8 +142,11 @@ public class SeedData {
 							logger.info("Boarding location not found. Boarding="+sd.BoardLocation);
 							int tn=0;
 							tn=RouteNodes.FindTransferLocation((Integer)sd.BoardLocation, rn,IPFMain.otherRouteStops);
-							if(tn>0)
+							if(tn>0){
 								logger.debug("Found transfer node of "+tn); //Direct transfer
+								sd.BoardLocation=tn;
+								outSD.get(i).BoardLocation=tn;
+							}
 							else
 								logger.debug("Transfer node not found.  Looking for "+sd.BoardLocation+" in "+RTD);
 						}
@@ -149,8 +154,11 @@ public class SeedData {
 							logger.info("Alighting location not found. Alighting="+sd.AlightLocation);
 							int tn=0;
 							tn=RouteNodes.FindTransferLocation((Integer)sd.AlightLocation, rn, IPFMain.otherRouteStops);
-							if(tn>0)
+							if(tn>0){
 								logger.debug("Found transfer node of "+tn); //Direct transfer
+								sd.AlightLocation=tn;
+								outSD.get(i).AlightLocation=tn;
+							}
 							else
 								logger.debug("Transfer node not found.  Looking for "+sd.AlightLocation+" in "+RTD);
 						}
@@ -179,7 +187,6 @@ public class SeedData {
 	 * @throws IOException
 	 */	
 	public static List<SeedData> reSeedTable(Hashtable<String,String> tableSetup, List<RouteNodes> routeNodes, List<SeedData> seeds, List<MarginalData>marginals, String RTD) throws IOException{
-		//TODO: check for same boarding and alighting location (if so, ignore it)
 		Logger logger=IPFMain.logger;
 		logger.debug("In reseed table process");
 		String RTD1=RTD.substring(0, RTD.indexOf("|")); //Line name
@@ -200,27 +207,36 @@ public class SeedData {
 
 		for(MarginalData md:marginals){
 			if(stopOrder.get(md.StopID) == null)
-				logger.debug("Route "+RTD1+"Stop ID "+md.StopID+" in marginals but not route stops listing");
+				logger.debug("Route "+RTD1+" Stop ID "+md.StopID+" in marginals but not route stops listing");
+		}
+		
+		for(SeedData sd:seeds){
+			if(stopOrder.get(sd.BoardLocation)==null)
+				logger.debug("Route "+RTD+" Stop ID "+sd.BoardLocation+" in seed boarding locations but not route stops listing");
+			if(stopOrder.get(sd.AlightLocation)==null)
+				logger.debug("Route "+RTD+" Stop ID "+sd.AlightLocation+" in seed alighting locations but not route stops listing");
 		}
 		
 		// Fill output seed data with actual value or 0.1
 		List<SeedData> outSD=new ArrayList<SeedData>();
 		for(MarginalData m:marginals){
 			for(MarginalData n:marginals){
+				boolean skip=false;
 				for(SeedData sd:seeds){
-					if(m.StopID==sd.BoardLocation && n.StopID==sd.AlightLocation && m.StopID!=n.StopID){
+					if((m.StopID==sd.BoardLocation && n.StopID==sd.AlightLocation)){   // || (m.StopID==sd.AlightLocation && n.StopID==sd.BoardLocation)
 						outSD.add(sd);
-						break;
-					}else if(stopOrder.get(m.StopID)==null){
+						skip=true;
+					}
+				}
+				if(!skip){
+					if(stopOrder.get(m.StopID)==null){
 						logger.debug("Route "+RTD+" stop "+m.StopID+" not in sequence");
 					}else if(stopOrder.get(n.StopID)==null){
 						logger.debug("Route "+RTD+" stop "+n.StopID+" not in sequence");
-					}else if(stopOrder.get(m.StopID)<stopOrder.get(n.StopID)){
+					}else if(stopOrder.get(m.StopID)<stopOrder.get(n.StopID) && m.Boardings>0 && n.Alightings>0){
 						SeedData newsd=new SeedData(m.StopID,n.StopID,0.1);
 						outSD.add(newsd);
-						break;
 					}
-					
 				}
 			}
 		}

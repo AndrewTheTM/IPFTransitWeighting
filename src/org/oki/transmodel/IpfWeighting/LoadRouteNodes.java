@@ -57,6 +57,7 @@ public class LoadRouteNodes {
 			}
 		}
 		rcTransTable.getDatabase().close();
+		dFile=null;
 		
 		return rn;
 		

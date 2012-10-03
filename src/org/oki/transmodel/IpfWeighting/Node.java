@@ -1,6 +1,8 @@
 package org.oki.transmodel.IpfWeighting;
 
-public class Node {
+import java.io.Serializable;
+
+public class Node implements Serializable {
 	int Id;
 	double x;
 	double y;

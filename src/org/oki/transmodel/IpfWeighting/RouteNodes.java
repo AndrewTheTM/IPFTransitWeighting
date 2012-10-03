@@ -1,5 +1,6 @@
 package org.oki.transmodel.IpfWeighting;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +11,11 @@ import org.apache.log4j.Logger;
  * @author arohne
  *
  */
-public class RouteNodes {
+public class RouteNodes implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2387639903192705226L;
 	String routeID;
 	String TimePeriod;
 	String Direction;
@@ -61,11 +66,11 @@ public class RouteNodes {
 		logger.debug("No Transfer-node found.  Looking for a walk node within 0.25 miles");
 		for(OtherStops os:other){
 			boolean hasFrom=false;
-			logger.debug("Looking in "+os.RouteId);
+			//logger.debug("Looking in "+os.RouteId);
 			for(Node n:os.Nodes){
 				if(n.Id==FromNode){
 					hasFrom=true;
-					logger.debug("Has From Node");
+					//logger.debug("Has From Node");
 				}
 			}
 			
@@ -74,7 +79,7 @@ public class RouteNodes {
 					for(Node crn:currentRoute.Nodes){
 						if(getDistance(n.x,n.y,crn.x,crn.y)<=0.25){
 							logger.debug("Found one! "+crn.Id);
-							return n.Id;
+							return crn.Id;
 						}
 					}
 				}
