@@ -27,14 +27,11 @@ public class IPFMain {
 	public static List<RouteNodes> Routes=new ArrayList<RouteNodes>();
 	public static List<OtherStops> otherRouteStops=new ArrayList<OtherStops>();
 
+	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {	
 		logger.info("Program Start");
 		//Get list of route-time-direction sets to work on
 		Hashtable<String, String> tableSetup=new Hashtable<String, String>();
-		
-		/*
-		 * Temporary and trying
-		 */
 		boolean warmStart=true;
 		boolean saveObjects=false;
 		
@@ -55,13 +52,22 @@ public class IPFMain {
 		tableSetup.put("sof_alightingField", "alight");
 		tableSetup.put("BoardingLocationCode", "BRDCODE");
 		tableSetup.put("AlightingLocationCode","ALTCODE");
+		tableSetup.put("PNRTable", "PNRData");
 
 		List<String> routesRTD=Controller.getRoutes(tableSetup);
 		List<MarginalData> marginals=new ArrayList<MarginalData>();
 		List<SeedData> seeds=new ArrayList<SeedData>();
+		List<WeightData> FinalWeights=new ArrayList<WeightData>();
+		PNRWeights PNRs=new PNRWeights();
+		
+		try {
+			PNRs=PNRWeightsDatabase.LoadPNR(tableSetup);
+		} catch (IOException e2) {
+			e2.printStackTrace();
+		}
 		
 		if(!warmStart){
-			//Load Routes into RouteNodes Object
+			//Load Routes into RouteNodes Object - takes a while!
 			logger.info("Preparing to load nodes");
 			int cnt=0;
 			for(String RTD:routesRTD)
@@ -82,6 +88,7 @@ public class IPFMain {
 			
 			
 		}else{
+			// Loads objects from disk array
 			try {
 				FileInputStream f_in=new FileInputStream(tableSetup.get("datapath")+"RouteRTDObject.obj");
 				ObjectInputStream obj_in=new ObjectInputStream(f_in);
@@ -106,8 +113,6 @@ public class IPFMain {
 					otherRouteStops=(List<OtherStops>) inputObject3;
 				obj_in.close();
 				f_in.close();
-				
-				
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
@@ -115,13 +120,10 @@ public class IPFMain {
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
-			
-			/*
-			 * load obects from disk object array
-			 */
 		}
 		
 		if(saveObjects){
+			// Saves objects to disk to allow for retrieval in subsequent runs
 			try {
 				//RoutesRTD
 				FileOutputStream f_out = new FileOutputStream(tableSetup.get("datapath")+"RouteRTDObject.obj");
@@ -141,42 +143,65 @@ public class IPFMain {
 				obj_out.writeObject(otherRouteStops);
 				obj_out.close();
 				f_out.close();
-				
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			
 		}
 		
 		for(String rtd:routesRTD){
 			logger.info("Filling marginal objects. "+rtd);
-			//Fill Marginals Objects
-			
 			marginals=MarginalData.getMarginals(tableSetup,rtd);
 			seeds=SeedData.getSeeds(tableSetup, Routes, rtd);
 			List<SeedData>outSD2=new ArrayList<SeedData>();
 			try {
 				logger.info("Reseeding Table");
 				outSD2=SeedData.reSeedTable(tableSetup, Routes, seeds, marginals, rtd);
-				//TODO: go into IPF Procedure
 				outSD2=IPFWork.runIPF(outSD2,marginals);
 				
-			
-				//TODO: PNR location adjustments
+				String RTD1=rtd.substring(0, rtd.indexOf("|")); //Route ID
+				String RTD2=rtd.substring(rtd.indexOf("|")+1, rtd.indexOf("|", rtd.indexOf("|")+1)); //Time
+				String RTD3=rtd.substring(rtd.lastIndexOf("|")+1,rtd.length()); //Direction
+				
+				WeightData fwd=new WeightData();
+				for(int sdCnt=0;sdCnt<outSD2.size();sdCnt++){
+					fwd.RouteName=RTD1;
+					fwd.TimePeriod=RTD2;
+					fwd.Direction=RTD3;
+					fwd.BoardLocation=outSD2.get(sdCnt).BoardLocation;
+					fwd.AlightLocation=outSD2.get(sdCnt).AlightLocation;
+					fwd.ODWeightValue=outSD2.get(sdCnt).WeightValue;
+					if((RTD2.equalsIgnoreCase("AM Peak") && RTD3.equalsIgnoreCase("Inbound")) || (RTD2.equalsIgnoreCase("PM Peak") && RTD3.equalsIgnoreCase("Outbound"))){
+						for(int pnrCnt=0;pnrCnt<PNRs.size();pnrCnt++){
+							if(outSD2.get(sdCnt).BoardLocation==PNRs.get(pnrCnt).StopNum && RTD2.equalsIgnoreCase("AM Peak")){
+								fwd.StationWalkWeight=PNRs.get(pnrCnt).getPkNonMWeight();
+								fwd.StationPNRWeight=PNRs.get(pnrCnt).getPkPNRWeight();
+								fwd.StationKNRWeight=PNRs.get(pnrCnt).getPkKNRWeight();
+							}else if(outSD2.get(sdCnt).AlightLocation==PNRs.get(pnrCnt).StopNum && RTD2.equalsIgnoreCase("PM Peak")){
+								fwd.StationWalkWeight=PNRs.get(pnrCnt).getPkNonMWeight();
+								fwd.StationPNRWeight=PNRs.get(pnrCnt).getPkPNRWeight();
+								fwd.StationKNRWeight=PNRs.get(pnrCnt).getPkKNRWeight();
+							}
+						}
+					}else{
+						fwd.StationKNRWeight=1;
+						fwd.StationPNRWeight=1;
+						fwd.StationWalkWeight=1;
+					}
+					FinalWeights.add(fwd);
+				}
+				
 				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			//NOTE: This is good to here.  The marginals and seeds have been used to make weights in Excel.
 
-			//break;
 		}
-		
+		UpdateDatabase.updateSurveyTableWeights(tableSetup, FinalWeights);
+		//TODO: Update database?
 		int a=1;
 		System.out.println(a);
-		//TODO: Non-sampled route adjustment (vehicle adjustments)
 		
 		
 	}

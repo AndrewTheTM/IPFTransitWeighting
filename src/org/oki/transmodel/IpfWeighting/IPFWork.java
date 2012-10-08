@@ -18,7 +18,7 @@ public class IPFWork {
 		double[] adjustment;
 		List<Double> marginalRows=new ArrayList<Double>();
 		List<Double> marginalCols=new ArrayList<Double>();
-		
+		int Iter=0;
 		
 		//Initialize variables
 		observed=new double[md.size()];
@@ -63,86 +63,83 @@ public class IPFWork {
 			}
 		}
 		
-		for(int m=0;m<observed.length;m++)
-			observed[m]=0;
-		
-		for(int m=0;m<md.size();m++){
-			for(int i=0;i<sd.size();i++){
-				if(sd.get(i).AlightLocation==md.get(m).StopID){
-					observed[m]+=sd.get(i).WeightValue;
+		//Loop?
+		while(aad>0.1 && Iter<10){
+			Iter++;
+			for(int m=0;m<observed.length;m++)
+				observed[m]=0;
+			
+			for(int m=0;m<md.size();m++){
+				for(int i=0;i<sd.size();i++){
+					if(sd.get(i).AlightLocation==md.get(m).StopID){
+						observed[m]+=sd.get(i).WeightValue;
+					}
+				}
+			}
+			aad=0;
+			aadCnt=0;
+			for(int m=0;m<md.size();m++){
+				if(observed[m]>0)
+					adjustment[m]=marginalCols.get(m)/observed[m];
+				else
+					adjustment[m]=0;
+				if(Math.abs(marginalCols.get(m)-observed[m])>0){ 
+					aad+=Math.abs(marginalCols.get(m)-observed[m]);
+					aadCnt++;
+				}
+			}
+			aad/=aadCnt;
+			//Good to here
+			
+			//Do seed weights
+			for(int m=0;m<md.size();m++){
+				for(int i=0;i<sd.size();i++){
+					if(sd.get(i).AlightLocation==md.get(m).StopID){ //alight
+						SeedData nsd=sd.get(i);
+						nsd.WeightValue=sd.get(i).WeightValue*adjustment[m];
+						sd.remove(i);
+						sd.add(i,nsd);
+						//sd.get(i).WeightValue*=adjustment[m]; // Check what is going on here.
+					}
+				}
+			}
+			
+			//Do row weights
+			for(int m=0;m<observed.length;m++)
+				observed[m]=0;
+			
+			for(int m=0;m<md.size();m++){
+				for(int i=0;i<sd.size();i++){
+					if(sd.get(i).BoardLocation==md.get(m).StopID){ //alight
+						observed[m]+=sd.get(i).WeightValue;
+					}
+				}
+			}
+			aad=0;
+			aadCnt=0;
+			for(int m=0;m<md.size();m++){
+				if(observed[m]>0)
+					adjustment[m]=marginalRows.get(m)/observed[m];
+				else
+					adjustment[m]=0;
+				if(Math.abs(marginalRows.get(m)-observed[m])>0){
+					aad+=Math.abs(marginalRows.get(m)-observed[m]);
+					aadCnt++;
+				}
+			}
+			aad/=aadCnt;
+			//Do seed weights
+			for(int m=0;m<md.size();m++){
+				for(int i=0;i<sd.size();i++){
+					if(sd.get(i).BoardLocation==md.get(m).StopID){ //alight
+						SeedData nsd=sd.get(i);
+						nsd.WeightValue=sd.get(i).WeightValue*adjustment[m];
+						sd.remove(i);
+						sd.add(i,nsd);
+					}
 				}
 			}
 		}
-		aad=0;
-		aadCnt=0;
-		for(int m=0;m<md.size();m++){
-			if(observed[m]>0)
-				adjustment[m]=marginalCols.get(m)/observed[m];
-			else
-				adjustment[m]=0;
-			if(Math.abs(marginalCols.get(m)-observed[m])>0){ 
-				aad+=Math.abs(marginalCols.get(m)-observed[m]);
-				aadCnt++;
-			}
-		}
-		aad/=aadCnt;
-		//Good to here
-		
-		//Do seed weights
-		for(int m=0;m<md.size();m++){
-			for(int i=0;i<sd.size();i++){
-				if(sd.get(i).AlightLocation==md.get(m).StopID){ //alight
-					SeedData nsd=sd.get(i);
-					nsd.WeightValue=sd.get(i).WeightValue*adjustment[m];
-					sd.remove(i);
-					sd.add(i,nsd);
-					//sd.get(i).WeightValue*=adjustment[m]; // Check what is going on here.
-				}
-			}
-		}
-		
-		//Do row weights
-		for(int m=0;m<observed.length;m++)
-			observed[m]=0;
-		
-		for(int m=0;m<md.size();m++){
-			for(int i=0;i<sd.size();i++){
-				if(sd.get(i).BoardLocation==md.get(m).StopID){ //alight
-					observed[m]+=sd.get(i).WeightValue;
-				}
-			}
-		}
-		aad=0;
-		aadCnt=0;
-		for(int m=0;m<md.size();m++){
-			if(observed[m]>0)
-				adjustment[m]=marginalRows.get(m)/observed[m];
-			else
-				adjustment[m]=0;
-			if(Math.abs(marginalRows.get(m)-observed[m])>0){
-				aad+=Math.abs(marginalRows.get(m)-observed[m]);
-				aadCnt++;
-			}
-		}
-		aad/=aadCnt;
-		//TODO: Loop!  This works!
-		
-		int a=1;		
-		System.out.println(a);
-		
-		
-		
-		
-		
-		return null;
-	}
-	
-	/*
-	 * Sub:
-	 * input List of SeedData
-	 * input MarginalData
-	 * output SeedData object with weight values filled
-	 */
-	
-	
+		return sd;
+	}	
 }
