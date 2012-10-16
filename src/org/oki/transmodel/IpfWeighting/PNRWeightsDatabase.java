@@ -38,9 +38,6 @@ public class PNRWeightsDatabase {
 		for(Map<String,Object> row:table){
 			if(outList.findByRouteStop(row.get(tableSetup.get("routeField")).toString(), CInt(row.get(tableSetup.get("BoardingLocationCode"))))!=null ||
 					outList.findByRouteStop(row.get(tableSetup.get("routeField")).toString(), CInt(row.get(tableSetup.get("AlightingLocationCode"))))!=null){
-				if(row.get("RTCODE").equals("MET-...3X"))
-					if(row.get("BRDCODE").equals(2850114.0) || row.get("ALTCODE").equals(2850114))
-						System.out.println("Debug "+row.get("SAMPN").toString()+" BOARD="+row.get("BRDCODE")+" ALIGHT="+row.get("ALTCODE"));
 				PNRWeighting pnr=outList.findByRouteStop(row.get(tableSetup.get("routeField")).toString(), CInt(row.get(tableSetup.get("BoardingLocationCode"))));
 				if(pnr==null) pnr=outList.findByRouteStop(row.get(tableSetup.get("routeField")).toString(), CInt(row.get(tableSetup.get("AlightingLocationCode"))));
 				PNRWeighting pnrUpd=pnr;

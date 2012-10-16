@@ -1,7 +1,13 @@
 package org.oki.transmodel.IpfWeighting;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.log4j.Logger;
 
 public class IPFWork {
 	
@@ -19,6 +25,7 @@ public class IPFWork {
 		List<Double> marginalRows=new ArrayList<Double>();
 		List<Double> marginalCols=new ArrayList<Double>();
 		int Iter=0;
+		Logger logger=IPFMain.logger;
 		
 		//Initialize variables
 		observed=new double[md.size()];
@@ -29,6 +36,23 @@ public class IPFWork {
 			marginalRows.add((double) md.get(m).Boardings);
 			marginalCols.add((double) md.get(m).Alightings);
 		}
+		
+		/*
+		 * Debugging
+		 */
+		logger.debug("writing debugging objects");
+		
+		try {
+			DebugDropper.WriteOut(md, "S:\\User\\Rohne\\Projects\\Transit OB Survey\\Weighting\\md.csv");
+			DebugDropper.WriteOut(sd, "S:\\User\\Rohne\\Projects\\Transit OB Survey\\Weighting\\sd.csv");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		/*
+		 * End Debugging
+		 */
+		
 		
 		//Rows (Boardings) first
 		for(int m=0;m<md.size();m++){
@@ -43,7 +67,7 @@ public class IPFWork {
 			if(observed[m]>0)
 				adjustment[m]=marginalRows.get(m)/observed[m];
 			else
-				adjustment[m]=0;
+				adjustment[m]=0.01;
 			if(Math.abs(marginalRows.get(m)-observed[m])>0){
 				aad+=Math.abs(marginalRows.get(m)-observed[m]);
 				aadCnt++;
@@ -63,7 +87,7 @@ public class IPFWork {
 			}
 		}
 		
-		//Loop?
+		//Loop
 		while(aad>0.1 && Iter<10){
 			Iter++;
 			for(int m=0;m<observed.length;m++)
@@ -82,7 +106,7 @@ public class IPFWork {
 				if(observed[m]>0)
 					adjustment[m]=marginalCols.get(m)/observed[m];
 				else
-					adjustment[m]=0;
+					adjustment[m]=0.01;
 				if(Math.abs(marginalCols.get(m)-observed[m])>0){ 
 					aad+=Math.abs(marginalCols.get(m)-observed[m]);
 					aadCnt++;
@@ -121,7 +145,7 @@ public class IPFWork {
 				if(observed[m]>0)
 					adjustment[m]=marginalRows.get(m)/observed[m];
 				else
-					adjustment[m]=0;
+					adjustment[m]=0.01;
 				if(Math.abs(marginalRows.get(m)-observed[m])>0){
 					aad+=Math.abs(marginalRows.get(m)-observed[m]);
 					aadCnt++;

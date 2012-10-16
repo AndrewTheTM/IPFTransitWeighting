@@ -2,6 +2,7 @@ package org.oki.transmodel.IpfWeighting;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -9,7 +10,8 @@ import java.util.Map;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.Table;
 
-public class MarginalData {
+public class MarginalData implements Serializable{
+	private static final long serialVersionUID = -8198384423578984743L;
 	int StopID;
 	int Boardings;
 	int Alightings;

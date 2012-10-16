@@ -2,6 +2,11 @@ package org.oki.transmodel.IpfWeighting;
 
 import java.io.Serializable;
 
+/**
+ * Class that holds PNR count and survey data and returns station weights
+ * @author arohne
+ *
+ */
 public class PNRWeighting implements Serializable{
 	private static final long serialVersionUID = 177593569545028188L;
 	String RouteID;
@@ -19,32 +24,73 @@ public class PNRWeighting implements Serializable{
 	int OpKNRSurvey;
 	int OpNonMSurvey;
 	
-	//TODO: Document
+	/**
+	 * Value of peak PNR station weight
+	 * @return weight value
+	 */
 	public double getPkPNRWeight()
 	{
-		return (double)Math.min(PkPNRCount/Math.max(PkPNRSurvey,0.0001),1);
+		if(PkPNRSurvey>0)
+			return (double)PkPNRCount/PkPNRSurvey;
+		else
+			return 1;
 	}
 	
+	/**
+	 * Value of peak KNR station weight
+	 * @return weight value
+	 */
 	public double getPkKNRWeight()
 	{
-		return (double)Math.min(PkKNRCount/Math.max(PkKNRSurvey,0.0001),1);
+		if(PkKNRSurvey>0)
+			return (double)PkKNRCount/PkKNRSurvey;
+		else
+			return 1;
 	}
 	
+	/**
+	 * Value of peak non-motorized station weight
+	 * @return weight value
+	 */
 	public double getPkNonMWeight()
 	{
-		return (double)Math.min(PkNonMCount/Math.max(PkNonMSurvey,0.0001),1);
+		if(PkNonMSurvey>0)
+			return (double)PkNonMCount/PkNonMSurvey;
+		else
+			return 1;
 	}
 	
+	/**
+	 * Value of off-peak PNR station weight
+	 * @return weight value
+	 */
 	public double getOpPNRWeight()
 	{
-		return (double)Math.min(OpPNRCount/Math.max(OpPNRSurvey,0.0001),1);
+		if(OpPNRSurvey>0)
+			return (double)OpPNRCount/OpPNRSurvey;
+		else
+			return 1;
 	}
+	/**
+	 * Value of off-peak KNR station weight
+	 * @return weight value
+	 */
 	public double getOpKNRWeight()
 	{
-		return (double)Math.min(OpKNRCount/Math.max(OpKNRSurvey,0.0001),1);
+		if(OpKNRSurvey>0)
+			return (double)OpKNRCount/OpKNRSurvey;
+		else
+			return 1;
 	}
+	/**
+	 * Value of off-peak non-motorized station weight
+	 * @return weight value
+	 */
 	public double getOpNonMWeight()
 	{
-		return (double)Math.min(OpNonMCount/Math.max(OpNonMSurvey,0.0001),1);
+		if(OpNonMSurvey>0)
+			return (double)OpNonMCount/OpNonMSurvey;
+		else
+			return 1;
 	}
 }

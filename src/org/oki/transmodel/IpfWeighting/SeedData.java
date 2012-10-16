@@ -2,6 +2,7 @@ package org.oki.transmodel.IpfWeighting;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -16,9 +17,12 @@ import com.healthmarketscience.jackcess.Table;
  * @author arohne
  *
  */
-public class SeedData {
+public class SeedData implements Serializable{
+	private static final long serialVersionUID = -7914903899670463694L;
 	int BoardLocation;
 	int AlightLocation;
+	int DBBoardLocation;
+	int DBAlightLocation;
 	double SeedValue;
 	double WeightValue;
 	int Sequence;
@@ -30,6 +34,8 @@ public class SeedData {
 	public SeedData(int BoardLocation, int AlightLocation){
 		this.BoardLocation=BoardLocation;
 		this.AlightLocation=AlightLocation;
+		this.DBBoardLocation=BoardLocation;
+		this.DBAlightLocation=AlightLocation;
 		this.SeedValue=1;
 		this.WeightValue=0;
 		this.Sequence=0;
@@ -43,6 +49,8 @@ public class SeedData {
 	public SeedData(int BoardLocation, int AlightLocation, double SeedValue){
 		this.BoardLocation=BoardLocation;
 		this.AlightLocation=AlightLocation;
+		this.DBBoardLocation=BoardLocation;
+		this.DBAlightLocation=AlightLocation;
 		this.SeedValue=SeedValue;
 		this.Sequence=0;
 		this.WeightValue=0;
@@ -52,7 +60,9 @@ public class SeedData {
 		
 		this.BoardLocation=0;
 		this.AlightLocation=0;
-		this.SeedValue=0;
+		this.DBBoardLocation=0;
+		this.DBAlightLocation=0;
+		this.SeedValue=0.1;
 		this.Sequence=0;
 		this.WeightValue=0;
 	}
@@ -235,6 +245,8 @@ public class SeedData {
 						logger.debug("Route "+RTD+" stop "+n.StopID+" not in sequence");
 					}else if(stopOrder.get(m.StopID)<stopOrder.get(n.StopID) && m.Boardings>0 && n.Alightings>0){
 						SeedData newsd=new SeedData(m.StopID,n.StopID,0.1);
+						outSD.add(newsd);
+						newsd=new SeedData(n.StopID, m.StopID,0.1);
 						outSD.add(newsd);
 					}
 				}

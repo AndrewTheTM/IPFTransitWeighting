@@ -32,22 +32,23 @@ public class LoadRouteNodes {
 		String RTD3=RTD.substring(RTD.lastIndexOf("|")+1,RTD.length()); //Direction		
 		RouteNodes rn=new RouteNodes();
 		File dFile = new File((String) tableSetup.get("dataFile"));
-		Table rcTransTable=Database.open(dFile).getTable("MetroRuncutPattern"); //TODO: Hash
+		
+		Table rcTransTable=Database.open(dFile).getTable(tableSetup.get("RuncutPatternTable"));
 		for(Map<String,Object> rcRow:rcTransTable){
 			if(rcRow.get("RTCODE").toString().equals(RTD1)){ 
-				Table pTable = Database.open(dFile).getTable("RuncutsStops");  //TODO: Hash
+				Table pTable = Database.open(dFile).getTable(tableSetup.get("RuncutStopTable"));
 				for(Map<String,Object> sRow:pTable){	
-					if(sRow.get("pattern_id").equals(rcRow.get("PatternId"))){ //TODO: Hash
+					if(sRow.get("pattern_id").equals(rcRow.get(tableSetup.get("RuncutPatternIDField")))){ 
 						rn.routeID=RTD1;
 						rn.Direction=RTD3;
 						rn.TimePeriod=RTD2;
 						Node nn=new Node();
-						nn.Id=((Double) (sRow.get("stop_id"))).intValue(); //TODO: Hash
-						Table betterStopTable=Database.open(dFile).getTable("Stops"); //TODO: Hash
+						nn.Id=((Double) (sRow.get(tableSetup.get("RuncutStopIDField")))).intValue();
+						Table betterStopTable=Database.open(dFile).getTable(tableSetup.get("StopsTable")); 
 						for(Map<String,Object> bstRow:betterStopTable){
-							if(((Double)bstRow.get("StopID")).intValue()==nn.Id){ //TODO: Hash
-								nn.x=((Double) bstRow.get("X")); //TODO: Hash
-								nn.y=((Double) bstRow.get("Y")); //TODO: Hash
+							if(((Double)bstRow.get(tableSetup.get("StopsStopIDField"))).intValue()==nn.Id){ 
+								nn.x=((Double) bstRow.get(tableSetup.get("StopXField"))); 
+								nn.y=((Double) bstRow.get(tableSetup.get("StopYField"))); 
 								break;
 							}
 						}

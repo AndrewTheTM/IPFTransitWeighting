@@ -9,7 +9,6 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
-
 import org.apache.log4j.Logger;
 /*
  * Author: Andrew Rohne
@@ -53,6 +52,19 @@ public class IPFMain {
 		tableSetup.put("BoardingLocationCode", "BRDCODE");
 		tableSetup.put("AlightingLocationCode","ALTCODE");
 		tableSetup.put("PNRTable", "PNRData");
+		tableSetup.put("OriginAccess", "OGET");
+		tableSetup.put("DestinationEgress","DGET");
+		tableSetup.put("ODWeightField", "ODWeight");
+		tableSetup.put("StationWeightField","StationWeight");
+		tableSetup.put("RuncutPatternTable", "MetroRuncutPattern");
+		tableSetup.put("RuncutStopTable", "RuncutsStops");
+		tableSetup.put("RuncutPatternIDField", "PatternId");
+		tableSetup.put("RuncutStopIDField","stop_id");
+		tableSetup.put("StopsTable","Stops");
+		tableSetup.put("StopXField","X");
+		tableSetup.put("StopYField","Y");
+		tableSetup.put("StopsStopIDField","StopID");
+		
 
 		List<String> routesRTD=Controller.getRoutes(tableSetup);
 		List<MarginalData> marginals=new ArrayList<MarginalData>();
@@ -151,26 +163,28 @@ public class IPFMain {
 		}
 		
 		for(String rtd:routesRTD){
-			logger.info("Filling marginal objects. "+rtd);
 			marginals=MarginalData.getMarginals(tableSetup,rtd);
 			seeds=SeedData.getSeeds(tableSetup, Routes, rtd);
+			List<MarginalData> AdjustedMarginals=new ArrayList<MarginalData>();
+			AdjustedMarginals=MarginalDataAdjust.AdjustMarginals(marginals, seeds);
 			List<SeedData>outSD2=new ArrayList<SeedData>();
 			try {
 				logger.info("Reseeding Table");
-				outSD2=SeedData.reSeedTable(tableSetup, Routes, seeds, marginals, rtd);
-				outSD2=IPFWork.runIPF(outSD2,marginals);
+				outSD2=SeedData.reSeedTable(tableSetup, Routes, seeds, AdjustedMarginals, rtd);
+				outSD2=IPFWork.runIPF(outSD2,AdjustedMarginals);
 				
 				String RTD1=rtd.substring(0, rtd.indexOf("|")); //Route ID
 				String RTD2=rtd.substring(rtd.indexOf("|")+1, rtd.indexOf("|", rtd.indexOf("|")+1)); //Time
 				String RTD3=rtd.substring(rtd.lastIndexOf("|")+1,rtd.length()); //Direction
 				
-				WeightData fwd=new WeightData();
+				
 				for(int sdCnt=0;sdCnt<outSD2.size();sdCnt++){
+					WeightData fwd=new WeightData();
 					fwd.RouteName=RTD1;
 					fwd.TimePeriod=RTD2;
 					fwd.Direction=RTD3;
-					fwd.BoardLocation=outSD2.get(sdCnt).BoardLocation;
-					fwd.AlightLocation=outSD2.get(sdCnt).AlightLocation;
+					fwd.BoardLocation=outSD2.get(sdCnt).DBBoardLocation;
+					fwd.AlightLocation=outSD2.get(sdCnt).DBAlightLocation;
 					fwd.ODWeightValue=outSD2.get(sdCnt).WeightValue;
 					if((RTD2.equalsIgnoreCase("AM Peak") && RTD3.equalsIgnoreCase("Inbound")) || (RTD2.equalsIgnoreCase("PM Peak") && RTD3.equalsIgnoreCase("Outbound"))){
 						for(int pnrCnt=0;pnrCnt<PNRs.size();pnrCnt++){
@@ -199,11 +213,6 @@ public class IPFMain {
 
 		}
 		UpdateDatabase.updateSurveyTableWeights(tableSetup, FinalWeights);
-		//TODO: Update database?
-		int a=1;
-		System.out.println(a);
-		
-		
 	}
 
 
